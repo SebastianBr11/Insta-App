@@ -15,7 +15,7 @@ const pupReq = async url => {
 
   // await page.waitForXPath(inputSel);
 
-  await page.waitForSelector(inputSel);
+  // await page.waitForSelector(inputSel);
 
   // page.click(inputSel)
 
