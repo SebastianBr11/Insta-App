@@ -1,7 +1,9 @@
 const puppeteer = require("puppeteer");
 
 const pupReq = async url => {
-  const options = { headless: true };
+  const options = {
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  };
 
   const instaURL = "https://instagram.com/instagram";
   const browser = await puppeteer.launch(options);
