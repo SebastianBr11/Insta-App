@@ -1,14 +1,17 @@
 const express = require("express");
+const path = require("path");
 const { pupReq } = require("./util/util");
 
 const app = express();
+
+app.use(express.static(path.join(__dirname, "build")));
 
 const PORT = 8000 || process.env.PORT;
 
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.json({ test: "hi" });
+app.get("/", function (req, res) {
+  res.sendFile(path.join(__dirname, "build", "index.html"));
 });
 
 app.get("/api/search", async (req, res) => {
