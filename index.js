@@ -6,7 +6,7 @@ const app = express();
 
 app.use(express.static(path.join(__dirname, "client/build")));
 
-const PORT = 8000 || process.env.PORT;
+const PORT = process.env.PORT || 8000;
 
 app.use(express.json());
 
