@@ -3,19 +3,20 @@ const puppeteer = require("puppeteer");
 const pupReq = async url => {
   const options = {
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    headless: false,
   };
 
   const instaURL = "https://instagram.com/instagram";
   const browser = await puppeteer.launch(options);
   const page = await browser.newPage();
-  await page.goto(instaURL, { timeout: 0, waitUntil: "networkidle0" });
+  await page.goto(instaURL, { timeout: 0 });
 
-  const inputSel =
-    "#react-root > section > nav > div > div._lz6s.Hz2lF > div.MWDvN.nfCOa > div.LWmhU._0aCwM > input";
+  const inputSel = "input[placeholder=Search]";
+  //  "#react-root > section > nav > div > div._lz6s.Hz2lF > div.MWDvN.nfCOa > div.LWmhU._0aCwM > input";
 
   // await page.waitForXPath(inputSel);
 
-  // await page.waitForSelector(inputSel);
+  await page.waitForSelector(inputSel);
 
   // page.click(inputSel)
 
