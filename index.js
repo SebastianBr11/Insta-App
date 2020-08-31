@@ -18,7 +18,7 @@ app.get("/api/search", async (req, res) => {
 
 app.get("/api/user/:id", async (req, res) => {
   const { id } = req.params;
-  res.json({ id });
+  res.json({ id, p: "hi" });
 });
 
 app.get("/", function (req, res) {
