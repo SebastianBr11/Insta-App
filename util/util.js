@@ -2,7 +2,7 @@ const puppeteer = require("puppeteer");
 
 const pupReq = async url => {
   const options = {
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: ["--no-sandbox"],
   };
 
   const instaURL = "https://instagram.com/instagram";
@@ -15,7 +15,7 @@ const pupReq = async url => {
 
   // await page.waitForXPath(inputSel);
 
-  await page.waitForSelector(inputSel);
+  await page.waitForSelector(inputSel, { timeout: 0 });
 
   // page.click(inputSel)
 
