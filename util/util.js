@@ -140,11 +140,11 @@ const getUser = async uid => {
   try {
     name = await descContainer.$eval("h1", el => el.textContent);
     desc = await descContainer.$eval("span", el => el.textContent);
-    link = await descContainer.$eval("a", el => el.getAttribute("href"));
-    authorId = await descContainer.$eval("a", el =>
+    link = await descContainer.$eval("a.yLUwa", el => el.getAttribute("href"));
+    authorId = await descContainer.$eval("a.yLUwa", el =>
       el.getAttribute("author_id")
     );
-    linkText = await descContainer.$eval("a", el => el.textContent);
+    linkText = await descContainer.$eval("a.yLUwa", el => el.textContent);
   } catch (e) {}
 
   await browser.close();
