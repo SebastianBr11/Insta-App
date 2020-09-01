@@ -10,15 +10,13 @@ const pupReq = async url => {
   const page = await browser.newPage();
   await page.goto(instaURL, { timeout: 0 });
 
-  page.on("request", req => {
-    if (
-      req.resourceType() == "stylesheet" ||
-      req.resourceType() == "font" ||
-      req.resourceType() == "image"
-    ) {
-      req.abort();
+  await page.setRequestInterception(true);
+
+  page.on("request", async req => {
+    if (req.resourceType() == "stylesheet" || req.resourceType() == "font") {
+      await req.abort();
     } else {
-      req.continue();
+      await req.continue();
     }
   });
 
@@ -116,15 +114,13 @@ const getUser = async uid => {
   const page = await browser.newPage();
   await page.goto(instaURL);
 
-  page.on("request", req => {
-    if (
-      req.resourceType() == "stylesheet" ||
-      req.resourceType() == "font" ||
-      req.resourceType() == "image"
-    ) {
-      req.abort();
+  await page.setRequestInterception(true);
+
+  page.on("request", async req => {
+    if (req.resourceType() == "stylesheet" || req.resourceType() == "font") {
+      await req.abort().catch(e => console.log(e));
     } else {
-      req.continue();
+      await req.continue().catch(e => console.log(e));
     }
   });
 
