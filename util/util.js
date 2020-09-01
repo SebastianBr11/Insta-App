@@ -94,7 +94,75 @@ const pupReq = async url => {
   return results;
 };
 
-module.exports = { pupReq };
+const getUser = async uid => {
+  const options = {
+    args: ["--no-sandbox"],
+  };
+
+  const instaURL = "https://instagram.com/" + uid;
+  const browser = await puppeteer.launch(options);
+  const page = await browser.newPage();
+  await page.goto(instaURL);
+
+  const title = await page.title();
+  if (title.includes("Page Not Found")) {
+    return null;
+  }
+
+  const numPostsSel = "span.g47SY";
+  const numFollowersSel = "span.g47SY";
+
+  await page.waitForSelector(numPostsSel);
+
+  const attrs = await page.$$(numPostsSel);
+
+  const [posts, followers, following] = await Promise.all(
+    attrs.map(async item => {
+      const title = await (await item.getProperty("title")).jsonValue();
+      if (title) {
+        // Followers
+        return await title;
+      }
+      const textContent = await item.evaluate(el => el.textContent);
+      return textContent;
+    })
+  );
+
+  const descContainerSel = "div.-vDIg";
+
+  const descContainer = await page.$(descContainerSel);
+
+  let link = null;
+  let name = null;
+  let desc = null;
+  let authorId = null;
+  let linkText = null;
+  try {
+    name = await descContainer.$eval("h1", el => el.textContent);
+    desc = await descContainer.$eval("span", el => el.textContent);
+    link = await descContainer.$eval("a", el => el.getAttribute("href"));
+    authorId = await descContainer.$eval("a", el =>
+      el.getAttribute("author_id")
+    );
+    linkText = await descContainer.$eval("a", el => el.textContent);
+  } catch (e) {}
+
+  await browser.close();
+
+  return {
+    uid,
+    authorId,
+    name,
+    desc,
+    posts,
+    followers,
+    following,
+    link,
+    linkText,
+  };
+};
+
+module.exports = { pupReq, getUser };
 
 const getSubtitle = async item => {
   const subtitle = await item.$eval(".Fy4o8", sub => sub.textContent);
