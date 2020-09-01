@@ -122,9 +122,9 @@ const getUser = async uid => {
       req.resourceType() == "font" ||
       req.resourceType() == "image"
     ) {
-      req.abort();
+      await req.abort();
     } else {
-      req.continue();
+      await req.continue();
     }
   });
 
