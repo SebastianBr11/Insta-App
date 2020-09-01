@@ -10,6 +10,18 @@ const pupReq = async url => {
   const page = await browser.newPage();
   await page.goto(instaURL, { timeout: 0 });
 
+  page.on("request", req => {
+    if (
+      req.resourceType() == "stylesheet" ||
+      req.resourceType() == "font" ||
+      req.resourceType() == "image"
+    ) {
+      req.abort();
+    } else {
+      req.continue();
+    }
+  });
+
   const inputSel = "input[placeholder=Search]";
   //  "#react-root > section > nav > div > div._lz6s.Hz2lF > div.MWDvN.nfCOa > div.LWmhU._0aCwM > input";
 
@@ -103,6 +115,18 @@ const getUser = async uid => {
   const browser = await puppeteer.launch(options);
   const page = await browser.newPage();
   await page.goto(instaURL);
+
+  page.on("request", req => {
+    if (
+      req.resourceType() == "stylesheet" ||
+      req.resourceType() == "font" ||
+      req.resourceType() == "image"
+    ) {
+      req.abort();
+    } else {
+      req.continue();
+    }
+  });
 
   const title = await page.title();
   if (title.includes("Page Not Found")) {
