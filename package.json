@@ -18,6 +18,7 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.17.1",
+    "fs": "0.0.1-security",
     "puppeteer": "^5.2.1"
   },
   "devDependencies": {
