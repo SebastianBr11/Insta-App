@@ -6,8 +6,8 @@ const router = express.Router();
 router.use(express.json());
 
 router.get("/api/search", async (req, res) => {
-  console.log("/api/search");
   const { q } = req.query;
+  console.log("/api/search?q=" + q);
   try {
     const results = await pupReq(q);
     if (results == 401) {
