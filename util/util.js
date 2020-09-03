@@ -1,5 +1,5 @@
 const puppeteer = require("puppeteer");
-const fs = require("fs/promises");
+const fs = require("fs.promises");
 
 const pupReq = async url => {
   const options = {
