@@ -42,9 +42,9 @@ router.get("/api/user/:id", async (req, res) => {
 router.get("/api/login", async (req, res) => {
   console.log("/api/login");
   const { login, uid } = req.headers;
+  console.log(uid + " is uid");
   try {
     const code = await tryLogin(uid, JSON.parse(login));
-    console.log(code + " is code");
     if (code != "good") {
       res.sendStatus(code);
       console.log("sending status: " + code);
