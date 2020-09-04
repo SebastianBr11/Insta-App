@@ -1,7 +1,7 @@
 const puppeteer = require("puppeteer");
 const fs = require("fs.promises");
 
-const pupReq = async url => {
+const pupReq = async (uid, url) => {
   const options = {
     args: ["--no-sandbox"],
     headless: true,
@@ -23,7 +23,7 @@ const pupReq = async url => {
   });
 
   try {
-    const cookiesString = await fs.readFile("./cookies.json");
+    const cookiesString = await fs.readFile(__dirname + `/cookies_${uid}.json`);
     if (cookiesString) {
       const cookies = JSON.parse(cookiesString);
       await page.setCookie(...cookies);
@@ -129,14 +129,14 @@ const pupReq = async url => {
   return results;
 };
 
-const getUser = async uid => {
+const getUser = async (uid, userId) => {
   const options = {
     args: ["--no-sandbox"],
     headless: true,
   };
 
   const instaURL = "https://www.instagram.com/accounts/login/";
-  const newUrl = "https://instagram.com/" + uid;
+  const newUrl = "https://instagram.com/" + userId;
   const browser = await puppeteer.launch(options);
   const page = await browser.newPage();
   await page.goto(instaURL);
@@ -152,7 +152,7 @@ const getUser = async uid => {
   });
 
   try {
-    const cookiesString = await fs.readFile("./cookies.json");
+    const cookiesString = await fs.readFile(__dirname + `/cookies_${uid}.json`);
     if (cookiesString) {
       const cookies = JSON.parse(cookiesString);
       await page.setCookie(...cookies);
@@ -225,7 +225,7 @@ const getUser = async uid => {
   await browser.close();
 
   return {
-    uid,
+    uid: userId,
     authorId,
     name,
     desc,
@@ -237,10 +237,10 @@ const getUser = async uid => {
   };
 };
 
-const tryLogin = async login => {
+const tryLogin = async (uid, login) => {
   const options = {
     args: ["--no-sandbox"],
-    headless: false,
+    headless: true,
   };
 
   const url = "https://www.instagram.com/accounts/login/";
@@ -261,18 +261,12 @@ const tryLogin = async login => {
 
   let code = "good";
   try {
-    const cookiesString = await fs.readFile("./cookies.json");
+    const cookiesString = await fs.readFile(__dirname + `/cookies_${uid}.json`);
     if (cookiesString) {
       const cookies = JSON.parse(cookiesString);
       await page.setCookie(...cookies);
-      browser.close();
-      return code;
     }
-  } catch (e) {
-    console.log(e);
-    code = "401";
-    return code;
-  }
+  } catch (e) {}
 
   const nameInputSel = "input[name=username]";
   const passwordInputSel = "input[name=password]";
@@ -282,18 +276,27 @@ const tryLogin = async login => {
 
   await page.type(nameInputSel, login.username.toString());
   await page.type(passwordInputSel, login.password.toString());
-  await page.waitFor(2000);
+  await page.waitFor(4000);
   await page.type(passwordInputSel, String.fromCharCode(13));
   await page.waitForNavigation({ timeout: 10000 }).catch(() => {
     browser.close();
     code = 404;
+    console.log("waited for navigation failed");
+    return code;
   });
 
-  const cookies = await page.cookies();
-  console.log(cookies);
-  await fs.writeFile("./cookies.json", JSON.stringify(cookies, null, 2));
-
+  try {
+    await fs.readFile(__dirname + `/cookies_${uid}.json`);
+  } catch (e) {
+    const cookies = await page.cookies();
+    console.log("creating cookie file");
+    await fs.writeFile(
+      __dirname + `/cookies_${uid}.json`,
+      JSON.stringify(cookies, null, 2)
+    );
+  }
   await browser.close();
+  console.log(code);
   return code;
 };
 
