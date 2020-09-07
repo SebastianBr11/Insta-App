@@ -41,9 +41,12 @@ const pupReq = async (uid, url) => {
 
     await page.type(nameInputSel, "asdasdasd");
     await page.type(passwordInputSel, "asdsadaaaaa");
-    await page.waitFor(2000);
+    await page.waitFor(1000);
     await page.type(passwordInputSel, String.fromCharCode(13));
-    await page.waitForNavigation({ timeout: 10000 });
+    await page.waitForNavigation({ timeout: 5000 }).catch(async () => {
+      await page.type(passwordInputSel, String.fromCharCode(13));
+      await page.waitForNavigation({ timeout: 5000 });
+    });
   } catch (e) {
     console.log("erorr " + e);
     throw new Error("eror logging in");
@@ -132,7 +135,7 @@ const pupReq = async (uid, url) => {
 const getUser = async (uid, userId) => {
   const options = {
     args: ["--no-sandbox"],
-    headless: true,
+    headless: false,
   };
 
   const instaURL = "https://www.instagram.com/accounts/login/";
@@ -170,13 +173,17 @@ const getUser = async (uid, userId) => {
 
     await page.type(nameInputSel, "asdasdasd");
     await page.type(passwordInputSel, "asdsadaaaaa");
-    await page.waitFor(2000);
+    await page.waitFor(1000);
     await page.type(passwordInputSel, String.fromCharCode(13));
-    await page.waitForNavigation({ timeout: 10000 });
+    await page.waitForNavigation({ timeout: 8000 }).catch(async () => {
+      await page.type(passwordInputSel, String.fromCharCode(13));
+      await page.waitForNavigation({ timeout: 8000 });
+    });
     await page.waitForSelector("input[placeholder=Search");
     await page.goto(newUrl);
   } catch (e) {
     console.log("erorr " + e);
+    await browser.close();
     throw new Error("eror logging in");
   }
 
@@ -222,6 +229,16 @@ const getUser = async (uid, userId) => {
     linkText = await descContainer.$eval("a.yLUwa", el => el.textContent);
   } catch (e) {}
 
+  let images;
+
+  if (posts != 0) {
+    const imagesSel = "div.v1Nh3.kIKUG._bz0w";
+    await page.waitForSelector(imagesSel + " .FFVAD");
+    console.log("getting images ");
+    images = await getImages(imagesSel, posts, page);
+    console.log("finished getting images");
+  }
+
   await browser.close();
 
   return {
@@ -234,13 +251,14 @@ const getUser = async (uid, userId) => {
     following,
     link,
     linkText,
+    images,
   };
 };
 
 const tryLogin = async (uid, login) => {
   const options = {
     args: ["--no-sandbox"],
-    headless: true,
+    headless: false,
   };
 
   const url = "https://www.instagram.com/accounts/login/";
@@ -276,13 +294,16 @@ const tryLogin = async (uid, login) => {
 
   await page.type(nameInputSel, login.username.toString());
   await page.type(passwordInputSel, login.password.toString());
-  await page.waitFor(4000);
+  await page.waitFor(1000);
   await page.type(passwordInputSel, String.fromCharCode(13));
-  await page.waitForNavigation({ timeout: 10000 }).catch(() => {
-    browser.close();
-    code = 404;
-    console.log("waited for navigation failed");
-    return code;
+  await page.waitForNavigation({ timeout: 5000 }).catch(async () => {
+    await page.type(passwordInputSel, String.fromCharCode(13));
+    await page.waitForNavigation({ timeout: 5000 }).catch(async () => {
+      await browser.close();
+      code = 404;
+      console.log("waited for navigation failed");
+      return code;
+    });
   });
 
   try {
@@ -316,4 +337,47 @@ const getImgSrc = async (item, url) => {
   }
 
   return "https://www.instagram.com/static/bundles/es6/sprite_core_32f0a4f27407.png/32f0a4f27407.png";
+};
+
+const getImages = async (imagesSel, posts, page, set = new Set()) => {
+  await page.waitForFunction(
+    'document.querySelectorAll(".FFVAD")[0].getAttribute("srcset")'
+  );
+  let images = await page.$$eval(
+    imagesSel,
+    async d =>
+      await Promise.all(
+        d.map(async a => ({
+          alt: a.querySelector(".FFVAD").getAttribute("alt"),
+          srcSet: a.querySelector(".FFVAD").getAttribute("srcset"),
+          href:
+            "https://www.instagram.com" +
+            a.querySelector("a").getAttribute("href"),
+        }))
+      )
+  );
+
+  images.forEach(img => {
+    set.add(JSON.stringify(img));
+  });
+
+  console.log("length: " + set.size);
+  console.log("posts: " + posts);
+
+  if (set.size >= 32) return set;
+
+  if (!(set.size >= posts)) {
+    await page.evaluate(() => {
+      window.scrollBy(0, window.innerHeight);
+    });
+    console.log("calling it again");
+    set = await getImages(imagesSel, posts, page, set);
+  }
+
+  return set
+    ? [...set].map(item => {
+        if (typeof item === "string") return JSON.parse(item);
+        else if (typeof item === "object") return item;
+      })
+    : null;
 };
