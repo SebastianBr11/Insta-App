@@ -232,11 +232,17 @@ const getUser = async (uid, userId) => {
   let images;
 
   if (posts != 0) {
-    const imagesSel = "div.v1Nh3.kIKUG._bz0w";
-    await page.waitForSelector(imagesSel + " .FFVAD");
-    console.log("getting images ");
-    images = await getImages(imagesSel, posts, page);
-    console.log("finished getting images");
+    try {
+      const privSel = ".rkEop";
+      await page.waitForSelector(privSel, { timeout: 4000 });
+    } catch (e) {
+      console.log("not private " + e);
+      const imagesSel = "div.v1Nh3.kIKUG._bz0w";
+      await page.waitForSelector(imagesSel + " .FFVAD");
+      console.log("getting images ");
+      images = await getImages(imagesSel, posts, page);
+      console.log("finished getting images");
+    }
   }
 
   await browser.close();
