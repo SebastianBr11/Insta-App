@@ -135,7 +135,7 @@ const pupReq = async (uid, url) => {
 const getUser = async (uid, userId) => {
   const options = {
     args: ["--no-sandbox"],
-    headless: false,
+    headless: true,
   };
 
   const instaURL = "https://www.instagram.com/accounts/login/";
@@ -264,7 +264,7 @@ const getUser = async (uid, userId) => {
 const tryLogin = async (uid, login) => {
   const options = {
     args: ["--no-sandbox"],
-    headless: false,
+    headless: true,
   };
 
   const url = "https://www.instagram.com/accounts/login/";
