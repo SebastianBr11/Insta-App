@@ -43,16 +43,16 @@ const pupReq = async (uid, url) => {
     await page.type(passwordInputSel, "asdsadaaaaa");
     await page.waitFor(1000);
     await page.type(passwordInputSel, String.fromCharCode(13));
-    await page.waitForNavigation({ timeout: 5000 }).catch(async () => {
+    await page.waitForNavigation({ timeout: 8000 }).catch(async () => {
       await page.type(passwordInputSel, String.fromCharCode(13));
-      await page.waitForNavigation({ timeout: 5000 });
+      await page.waitForNavigation({ timeout: 8000 });
     });
   } catch (e) {
     console.log("erorr " + e);
     throw new Error("eror logging in");
   }
 
-  const inputSel = "input[placeholder=Search]";
+  const inputSel = "input.XTCLo.x3qfX";
   //  "#react-root > section > nav > div > div._lz6s.Hz2lF > div.MWDvN.nfCOa > div.LWmhU._0aCwM > input";
 
   // await page.waitForXPath(inputSel);
@@ -179,7 +179,7 @@ const getUser = async (uid, userId) => {
       await page.type(passwordInputSel, String.fromCharCode(13));
       await page.waitForNavigation({ timeout: 8000 });
     });
-    await page.waitForSelector("input[placeholder=Search");
+    await page.waitForSelector("input.XTCLo.x3qfX");
     await page.goto(newUrl);
   } catch (e) {
     console.log("erorr " + e);
@@ -264,7 +264,7 @@ const getUser = async (uid, userId) => {
 const tryLogin = async (uid, login) => {
   const options = {
     args: ["--no-sandbox"],
-    headless: true,
+    headless: false,
   };
 
   const url = "https://www.instagram.com/accounts/login/";
