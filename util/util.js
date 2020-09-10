@@ -135,7 +135,7 @@ const pupReq = async (uid, url) => {
 const getUser = async (uid, userId) => {
   const options = {
     args: ["--no-sandbox"],
-    headless: true,
+    headless: false,
   };
 
   const instaURL = "https://www.instagram.com/accounts/login/";
@@ -176,7 +176,7 @@ const getUser = async (uid, userId) => {
     await page.waitFor(1000);
     await page.type(passwordInputSel, String.fromCharCode(13));
     await page.waitForNavigation({ timeout: 8000 }).catch(async () => {
-      await page.type(passwordInputSel, String.fromCharCode(13));
+      await page.type(passwordInputSel, String.fromCharCode(13)).catch();
       await page.waitForNavigation({ timeout: 8000 });
     });
     await page.waitForSelector("input.XTCLo.x3qfX");
@@ -219,15 +219,25 @@ const getUser = async (uid, userId) => {
   let desc = null;
   let authorId = null;
   let linkText = null;
-  try {
-    name = await descContainer.$eval("h1", el => el.textContent);
-    desc = await descContainer.$eval("span", el => el.textContent);
-    link = await descContainer.$eval("a.yLUwa", el => el.getAttribute("href"));
-    authorId = await descContainer.$eval("a.yLUwa", el =>
-      el.getAttribute("author_id")
-    );
-    linkText = await descContainer.$eval("a.yLUwa", el => el.textContent);
-  } catch (e) {}
+  let followedBy = null;
+  name = await descContainer
+    .$eval("h1", el => el.textContent)
+    .catch(e => console.log(e));
+  desc = await descContainer
+    .$eval("div.-vDIg > span", el => el.textContent)
+    .catch(e => console.log(e));
+  link = await descContainer
+    .$eval("a.yLUwa", el => el.getAttribute("href"))
+    .catch(e => console.log(e));
+  authorId = await descContainer
+    .$eval("a.yLUwa", el => el.getAttribute("author_id"))
+    .catch(e => console.log(e));
+  linkText = await descContainer
+    .$eval("a.yLUwa", el => el.textContent)
+    .catch(e => console.log(e));
+  followedBy = await descContainer
+    .$eval("span.tc8A9", el => el.textContent)
+    .catch(e => console.log(e));
 
   let images;
 
@@ -258,6 +268,7 @@ const getUser = async (uid, userId) => {
     link,
     linkText,
     images,
+    followedBy,
   };
 };
 
@@ -302,9 +313,9 @@ const tryLogin = async (uid, login) => {
   await page.type(passwordInputSel, login.password.toString());
   await page.waitFor(1000);
   await page.type(passwordInputSel, String.fromCharCode(13));
-  await page.waitForNavigation({ timeout: 5000 }).catch(async () => {
+  await page.waitForNavigation({ timeout: 8000 }).catch(async () => {
     await page.type(passwordInputSel, String.fromCharCode(13));
-    await page.waitForNavigation({ timeout: 5000 }).catch(async () => {
+    await page.waitForNavigation({ timeout: 8000 }).catch(async () => {
       await browser.close();
       code = 404;
       console.log("waited for navigation failed");
