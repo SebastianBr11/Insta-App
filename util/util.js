@@ -255,6 +255,8 @@ const getUser = async (uid, userId) => {
     }
   }
 
+  await browser.waitFor(10000);
+
   await browser.close();
 
   return {
@@ -270,6 +272,212 @@ const getUser = async (uid, userId) => {
     images,
     followedBy,
   };
+};
+
+const getUserFollowers = async (uid, userId, limit) => {
+  const options = {
+    args: ["--no-sandbox"],
+    headless: false,
+  };
+
+  const instaURL = "https://www.instagram.com/accounts/login/";
+  const newUrl = "https://instagram.com/" + userId;
+  const browser = await puppeteer.launch(options);
+  const page = await browser.newPage();
+  await page.goto(instaURL);
+
+  await page.setRequestInterception(true);
+
+  page.on("request", async req => {
+    if (req.resourceType() == "font") {
+      await req.abort().catch(e => console.log(e));
+    } else {
+      await req.continue().catch(e => console.log(e));
+    }
+  });
+
+  try {
+    const cookiesString = await fs.readFile(__dirname + `/cookies_${uid}.json`);
+    if (cookiesString) {
+      const cookies = JSON.parse(cookiesString);
+      await page.setCookie(...cookies);
+    }
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+
+  try {
+    const nameInputSel = "input[name=username]";
+    const passwordInputSel = "input[name=password]";
+
+    await page.waitForSelector(nameInputSel, { timeout: 5000 });
+
+    await page.type(nameInputSel, "asdasdasd");
+    await page.type(passwordInputSel, "asdsadaaaaa");
+    await page.waitFor(1000);
+    await page.type(passwordInputSel, String.fromCharCode(13));
+    await page.waitForNavigation({ timeout: 8000 }).catch(async () => {
+      await page.type(passwordInputSel, String.fromCharCode(13)).catch();
+      await page.waitForNavigation({ timeout: 8000 });
+    });
+    await page.waitForSelector("input.XTCLo.x3qfX");
+    await page.goto(newUrl);
+  } catch (e) {
+    console.log("erorr " + e);
+    await browser.close();
+    throw new Error("eror logging in");
+  }
+
+  const title = await page.title();
+  if (title.includes("Page Not Found")) {
+    return null;
+  }
+
+  const numPostsSel = "span.g47SY";
+
+  await page.waitForSelector(numPostsSel);
+
+  const attrs = await page.$$(numPostsSel);
+
+  const [posts, followerNum, following] = await Promise.all(
+    attrs.map(async item => {
+      const title = await (await item.getProperty("title")).jsonValue();
+      if (title) {
+        // Followers
+        return await title;
+      }
+      const textContent = await item.evaluate(el => el.textContent);
+      return textContent;
+    })
+  );
+
+  const followersLink = await page.$("a.-nal3");
+
+  await followersLink.click();
+
+  const selector = "div.PZuss";
+
+  await page.waitForSelector(selector);
+
+  if (limit == 0) limit = followerNum;
+
+  if (limit >= 1000) limit = 1000;
+
+  console.log(limit >= 1000);
+  const followers = await getFollowers(page, limit, selector);
+
+  await browser.close();
+
+  return { id: userId, followers };
+};
+
+const getUserFollowing = async (uid, userId, limit) => {
+  const options = {
+    args: ["--no-sandbox"],
+    headless: false,
+  };
+
+  const instaURL = "https://www.instagram.com/accounts/login/";
+  const newUrl = "https://instagram.com/" + userId;
+  const browser = await puppeteer.launch(options);
+  const page = await browser.newPage();
+  await page.goto(instaURL);
+
+  await page.setRequestInterception(true);
+
+  page.on("request", async req => {
+    if (req.resourceType() == "font") {
+      await req.abort().catch(e => console.log(e));
+    } else {
+      await req.continue().catch(e => console.log(e));
+    }
+  });
+
+  try {
+    const cookiesString = await fs.readFile(__dirname + `/cookies_${uid}.json`);
+    if (cookiesString) {
+      const cookies = JSON.parse(cookiesString);
+      await page.setCookie(...cookies);
+    }
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+
+  try {
+    const nameInputSel = "input[name=username]";
+    const passwordInputSel = "input[name=password]";
+
+    await page.waitForSelector(nameInputSel, { timeout: 5000 });
+
+    await page.type(nameInputSel, "asdasdasd");
+    await page.type(passwordInputSel, "asdsadaaaaa");
+    await page.waitFor(1000);
+    await page.type(passwordInputSel, String.fromCharCode(13));
+    await page.waitForNavigation({ timeout: 8000 }).catch(async () => {
+      await page.type(passwordInputSel, String.fromCharCode(13)).catch();
+      await page.waitForNavigation({ timeout: 8000 });
+    });
+    await page.waitForSelector("input.XTCLo.x3qfX");
+    await page.goto(newUrl);
+  } catch (e) {
+    console.log("erorr " + e);
+    await browser.close();
+    throw new Error("eror logging in");
+  }
+
+  const title = await page.title();
+  if (title.includes("Page Not Found")) {
+    return null;
+  }
+
+  const numPostsSel = "span.g47SY";
+
+  await page.waitForSelector(numPostsSel);
+
+  const attrs = await page.$$(numPostsSel);
+
+  const [posts, followerNum, followingNum] = await Promise.all(
+    attrs.map(async item => {
+      const title = await (await item.getProperty("title")).jsonValue();
+      if (title) {
+        // Followers
+        return await title;
+      }
+      const textContent = await item.evaluate(el => el.textContent);
+      return textContent;
+    })
+  );
+
+  const [_nothing, followingLink] = await page.$$("a.-nal3");
+
+  await followingLink.click();
+
+  const selector = "div.PZuss";
+
+  await page.waitForSelector(selector);
+
+  if (limit == 0) limit = followingNum;
+
+  if (limit >= 1000) limit = 1000;
+
+  console.log(limit >= 1000);
+
+  await page.evaluate(() => {
+    const div = document.querySelector("div.isgrP");
+    div.scrollTop = div.scrollHeight;
+  });
+
+  const following = await getFollowers(page, limit, selector);
+
+  console.log(following);
+
+  console.log(following.slice(12));
+
+  await browser.close();
+
+  return { id: userId, following };
 };
 
 const tryLogin = async (uid, login) => {
@@ -338,7 +546,13 @@ const tryLogin = async (uid, login) => {
   return code;
 };
 
-module.exports = { pupReq, getUser, tryLogin };
+module.exports = {
+  pupReq,
+  getUser,
+  tryLogin,
+  getUserFollowers,
+  getUserFollowing,
+};
 
 const getSubtitle = async item => {
   const subtitle = await item.$eval(".Fy4o8", sub => sub.textContent);
@@ -381,7 +595,13 @@ const getImages = async (imagesSel, posts, page, set = new Set()) => {
   console.log("length: " + set.size);
   console.log("posts: " + posts);
 
-  if (set.size >= 32) return set;
+  if (set.size >= 32)
+    return set
+      ? [...set].map(item => {
+          if (typeof item === "string") return JSON.parse(item);
+          else if (typeof item === "object") return item;
+        })
+      : null;
 
   if (!(set.size >= posts)) {
     await page.evaluate(() => {
@@ -389,6 +609,58 @@ const getImages = async (imagesSel, posts, page, set = new Set()) => {
     });
     console.log("calling it again");
     set = await getImages(imagesSel, posts, page, set);
+  }
+
+  return set
+    ? [...set].map(item => {
+        if (typeof item === "string") return JSON.parse(item);
+        else if (typeof item === "object") return item;
+      })
+    : null;
+};
+
+const getFollowers = async (page, limit, selector, set = new Set()) => {
+  await page.waitFor(100);
+  let followers = await page.$$eval(
+    selector + " li",
+    async d =>
+      await Promise.all(
+        d.map(async a => ({
+          alt: a.querySelector("img._6q-tv").getAttribute("alt"),
+          imgSrc: a.querySelector("img._6q-tv").getAttribute("src"),
+          subtitle:
+            a.querySelector("div.wFPL8")?.textContent ??
+            a.querySelector("div._7UhW9"?.textContent),
+          title: a.querySelector("a.FPmhX").getAttribute("title"),
+          href:
+            "https://instagram.com" +
+            a.querySelector("a.FPmhX").getAttribute("href"),
+        }))
+      )
+  );
+
+  followers.forEach(follower => {
+    set.add(JSON.stringify(follower));
+  });
+
+  console.log("length: " + set.size);
+  console.log("limit: " + limit);
+
+  if (set.size >= limit)
+    return set
+      ? [...set].map(item => {
+          if (typeof item === "string") return JSON.parse(item);
+          else if (typeof item === "object") return item;
+        })
+      : null;
+
+  if (!(set.size >= limit)) {
+    await page.evaluate(() => {
+      const div = document.querySelector("div.isgrP");
+      div.scrollTop = div.scrollHeight;
+    });
+    console.log("calling it again");
+    set = await getFollowers(page, limit, selector, set);
   }
 
   return set

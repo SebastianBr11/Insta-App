@@ -1,6 +1,12 @@
 const express = require("express");
 const fs = require("fs.promises");
-const { pupReq, getUser, tryLogin } = require("./util");
+const {
+  pupReq,
+  getUser,
+  getUserFollowers,
+  getUserFollowing,
+  tryLogin,
+} = require("./util");
 
 const router = express.Router();
 
@@ -29,6 +35,44 @@ router.get("/api/user/:id", async (req, res) => {
   let user = null;
   try {
     user = await getUser(uid, id);
+  } catch (error) {
+    console.log(error);
+  }
+  if (user != null) {
+    res.json(user);
+  } else {
+    res.sendStatus(404);
+  }
+});
+
+router.get("/api/user/:id/followers", async (req, res) => {
+  const { id } = req.params;
+  let { limit = 20 } = req.query;
+  console.log(limit);
+  console.log("/api/user/" + id + "/followers");
+  const { uid } = req.headers;
+  let user = null;
+  try {
+    user = await getUserFollowers(uid, id, limit);
+  } catch (error) {
+    console.log(error);
+  }
+  if (user != null) {
+    res.json(user);
+  } else {
+    res.sendStatus(404);
+  }
+});
+
+router.get("/api/user/:id/following", async (req, res) => {
+  const { id } = req.params;
+  let { limit = 20 } = req.query;
+  console.log(limit);
+  console.log("/api/user/" + id + "/following");
+  const { uid } = req.headers;
+  let user = null;
+  try {
+    user = await getUserFollowing(uid, id, limit);
   } catch (error) {
     console.log(error);
   }
