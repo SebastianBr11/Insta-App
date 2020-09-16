@@ -365,7 +365,15 @@ const getUserFollowers = async (uid, userId, limit) => {
   if (limit >= 1000) limit = 1000;
 
   console.log(limit >= 1000);
-  const followers = await getFollowers(page, limit, selector);
+
+  await page.evaluate(() => {
+    const div = document.querySelector("div.isgrP");
+    div.scrollTop = div.scrollHeight;
+  });
+
+  await page.waitFor(1000);
+
+  const followers = (await getFollowers(page, limit, selector)).slice(0, limit);
 
   await browser.close();
 
@@ -469,11 +477,9 @@ const getUserFollowing = async (uid, userId, limit) => {
     div.scrollTop = div.scrollHeight;
   });
 
-  const following = await getFollowers(page, limit, selector);
+  await page.waitFor(1000);
 
-  console.log(following);
-
-  console.log(following.slice(12));
+  const following = (await getFollowers(page, limit, selector)).slice(0, limit);
 
   await browser.close();
 
@@ -645,14 +651,16 @@ const getFollowers = async (page, limit, selector, set = new Set()) => {
 
   console.log("length: " + set.size);
   console.log("limit: " + limit);
+  console.log(set.size >= limit);
 
-  if (set.size >= limit)
+  if (set.size >= limit && !(limit <= 12)) {
     return set
       ? [...set].map(item => {
           if (typeof item === "string") return JSON.parse(item);
           else if (typeof item === "object") return item;
         })
       : null;
+  }
 
   if (!(set.size >= limit)) {
     await page.evaluate(() => {
