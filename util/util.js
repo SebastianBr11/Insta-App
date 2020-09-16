@@ -255,8 +255,6 @@ const getUser = async (uid, userId) => {
     }
   }
 
-  await browser.waitFor(10000);
-
   await browser.close();
 
   return {
@@ -354,7 +352,10 @@ const getUserFollowers = async (uid, userId, limit) => {
 
   const followersLink = await page.$("a.-nal3");
 
-  await followersLink.click();
+  await followersLink.click().catch(async e => {
+    await browser.close();
+    return { id: userId, followers: [] };
+  });
 
   const selector = "div.PZuss";
 
@@ -373,7 +374,12 @@ const getUserFollowers = async (uid, userId, limit) => {
 
   await page.waitFor(1000);
 
-  const followers = (await getFollowers(page, limit, selector)).slice(0, limit);
+  const followers = (
+    await getFollowers(page, limit, selector, followerNum).catch(async e => {
+      console.log(e);
+      await browser.close();
+    })
+  ).slice(0, limit);
 
   await browser.close();
 
@@ -460,7 +466,10 @@ const getUserFollowing = async (uid, userId, limit) => {
 
   const [_nothing, followingLink] = await page.$$("a.-nal3");
 
-  await followingLink.click();
+  await followingLink.click().catch(async e => {
+    await browser.close();
+    return { id: userId, following: [] };
+  });
 
   const selector = "div.PZuss";
 
@@ -479,7 +488,12 @@ const getUserFollowing = async (uid, userId, limit) => {
 
   await page.waitFor(1000);
 
-  const following = (await getFollowers(page, limit, selector)).slice(0, limit);
+  const following = (
+    await getFollowers(page, limit, selector, followingNum).catch(async e => {
+      console.log(e);
+      await browser.close();
+    })
+  ).slice(0, limit);
 
   await browser.close();
 
@@ -625,7 +639,13 @@ const getImages = async (imagesSel, posts, page, set = new Set()) => {
     : null;
 };
 
-const getFollowers = async (page, limit, selector, set = new Set()) => {
+const getFollowers = async (
+  page,
+  limit,
+  selector,
+  maxFollowers,
+  set = new Set()
+) => {
   await page.waitFor(100);
   let followers = await page.$$eval(
     selector + " li",
@@ -653,7 +673,7 @@ const getFollowers = async (page, limit, selector, set = new Set()) => {
   console.log("limit: " + limit);
   console.log(set.size >= limit);
 
-  if (set.size >= limit && !(limit <= 12)) {
+  if ((set.size >= limit && !(limit <= 12)) || set.size == maxFollowers) {
     return set
       ? [...set].map(item => {
           if (typeof item === "string") return JSON.parse(item);
