@@ -57,6 +57,10 @@ router.get("/api/user/:id/followers", async (req, res) => {
   } catch (error) {
     console.log(error);
   }
+  if (user === 406) {
+    res.sendStatus(406);
+    return;
+  }
   if (user != null) {
     res.json(user);
   } else {

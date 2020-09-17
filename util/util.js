@@ -240,11 +240,13 @@ const getUser = async (uid, userId) => {
     .catch(e => console.log(e));
 
   let images;
+  let private = false;
 
   if (posts != 0) {
     try {
       const privSel = ".rkEop";
       await page.waitForSelector(privSel, { timeout: 4000 });
+      private = true;
     } catch (e) {
       console.log("not private " + e);
       const imagesSel = "div.v1Nh3.kIKUG._bz0w";
@@ -269,6 +271,7 @@ const getUser = async (uid, userId) => {
     linkText,
     images,
     followedBy,
+    private,
   };
 };
 
@@ -349,6 +352,17 @@ const getUserFollowers = async (uid, userId, limit) => {
       return textContent;
     })
   );
+
+  console.log(followerNum);
+
+  if (followerNum == "0") return { id: userId, following: 0 };
+
+  try {
+    const privSel = ".rkEop";
+    await page.waitForSelector(privSel, { timeout: 4000 });
+    await browser.close();
+    return { id: userId, private: true };
+  } catch (e) {}
 
   const followersLink = await page.$("a.-nal3");
 
@@ -463,6 +477,15 @@ const getUserFollowing = async (uid, userId, limit) => {
       return textContent;
     })
   );
+
+  if (followingNum == "0") return { id: userId, following: 0 };
+
+  try {
+    const privSel = ".rkEop";
+    await page.waitForSelector(privSel, { timeout: 4000 });
+    await browser.close();
+    return { id: userId, private: true };
+  } catch (e) {}
 
   const [_nothing, followingLink] = await page.$$("a.-nal3");
 
