@@ -275,7 +275,7 @@ const getUser = async (uid, userId) => {
   };
 };
 
-const getUserFollowers = async (uid, userId, limit) => {
+const getUserFollowers = async (uid, userId, limit, offset) => {
   const options = {
     args: ["--no-sandbox"],
     headless: false,
@@ -389,18 +389,20 @@ const getUserFollowers = async (uid, userId, limit) => {
   await page.waitFor(1000);
 
   const followers = (
-    await getFollowers(page, limit, selector, followerNum).catch(async e => {
-      console.log(e);
-      await browser.close();
-    })
-  ).slice(0, limit);
+    await getFollowers(page, offset + limit, selector, followerNum).catch(
+      async e => {
+        console.log(e);
+        await browser.close();
+      }
+    )
+  ).slice(offset, offset + limit);
 
   await browser.close();
 
   return { id: userId, followers };
 };
 
-const getUserFollowing = async (uid, userId, limit) => {
+const getUserFollowing = async (uid, userId, limit, offset) => {
   const options = {
     args: ["--no-sandbox"],
     headless: false,
@@ -512,11 +514,13 @@ const getUserFollowing = async (uid, userId, limit) => {
   await page.waitFor(1000);
 
   const following = (
-    await getFollowers(page, limit, selector, followingNum).catch(async e => {
-      console.log(e);
-      await browser.close();
-    })
-  ).slice(0, limit);
+    await getFollowers(page, offset + limit, selector, followingNum).catch(
+      async e => {
+        console.log(e);
+        await browser.close();
+      }
+    )
+  ).slice(offset, offset + limit);
 
   await browser.close();
 

@@ -47,13 +47,22 @@ router.get("/api/user/:id", async (req, res) => {
 
 router.get("/api/user/:id/followers", async (req, res) => {
   const { id } = req.params;
-  let { limit = 20 } = req.query;
-  console.log(limit);
+  let { limit = 20, offset = 0 } = req.query;
+  if (typeof limit == typeof "") {
+    limit = parseInt(limit);
+  }
+  if (typeof offset === typeof "") {
+    offset = parseInt(offset);
+  }
+  console.log(typeof limit);
+  console.log(typeof offset);
+  console.log(typeof offset === typeof "");
+  console.log(typeof limit == typeof "");
   console.log("/api/user/" + id + "/followers");
   const { uid } = req.headers;
   let user = null;
   try {
-    user = await getUserFollowers(uid, id, limit);
+    user = await getUserFollowers(uid, id, limit, offset);
   } catch (error) {
     console.log(error);
   }
@@ -70,13 +79,18 @@ router.get("/api/user/:id/followers", async (req, res) => {
 
 router.get("/api/user/:id/following", async (req, res) => {
   const { id } = req.params;
-  let { limit = 20 } = req.query;
-  console.log(limit);
+  let { limit = 20, offset = 0 } = req.query;
+  if (typeof limit == typeof "") {
+    limit = parseInt(limit);
+  }
+  if (typeof offset === typeof "") {
+    offset = parseInt(offset);
+  }
   console.log("/api/user/" + id + "/following");
   const { uid } = req.headers;
   let user = null;
   try {
-    user = await getUserFollowing(uid, id, limit);
+    user = await getUserFollowing(uid, id, limit, offset);
   } catch (error) {
     console.log(error);
   }
